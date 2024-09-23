@@ -1,0 +1,12 @@
+google-cloud-aiplatform
+google-cloud-dlp
+python-docx
+google-auth
+google-cloud-videointelligence
+bigframes==0.26
+moviepy
+unidecode
+pytube
+google-cloud-discoveryengine
+langchain_google_vertexai
+streamlit
