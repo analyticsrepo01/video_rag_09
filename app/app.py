@@ -6,11 +6,11 @@ import vertexai
 from vertexai.language_models import TextEmbeddingModel
 
 # Define constants
-PROJECT_ID = "my-project-0004-346516"
+PROJECT_ID = "jingle-project-414801" #Replace with your own Project ID
 LOCATION = "us-central1"
 API_ENDPOINT = f"{LOCATION}-aiplatform.googleapis.com"
 SHOTS_FILE_PATH = "./shots.csv"
-CLIPS_DIR = ""
+CLIPS_DIR = "../"
 
 
 
@@ -52,7 +52,7 @@ if 'selected_index' not in st.session_state:
 
 shots_df = load_shots_df(SHOTS_FILE_PATH)
 if shots_df.empty:
-    st.write('saurabh shots_df', shots_df)
+    st.write('shots_df', shots_df)
 
 tab1, tab2 = st.tabs(["Select Index", "Query Clips"])
 
@@ -78,41 +78,23 @@ with tab2:
         query = st.text_input("Enter your query:")
         
         if not query:
-            st.write('saurabh query', query)
+            st.write('query', query)
         if query:
             try:
+                
                 query_embedding = get_embeddings(query, text_embedding_model)
 
                 selected_index = st.session_state['selected_index']
                 deployed_index_id = selected_index['deployed_index_id']
                 index_endpoint_name = selected_index['index_endpoint_name']
-                
-                if not selected_index or not deployed_index_id:                
-                    st.write('saurabh selected_index', selected_index)
-                    st.write('saurabh deployed_index_id', deployed_index_id)
-                    st.write('saurabh index_endpoint_name', index_endpoint_name)
 
-                my_index_id = "8368299436119425024"
-                my_index_endpoint_id = "8281781065152987136"
-
-                my_index = aiplatform.MatchingEngineIndex(my_index_id)
-                my_index_endpoint = aiplatform.MatchingEngineIndexEndpoint(my_index_endpoint_id)
-                
-                my_index_name = my_index._gca_resource.name
-                my_index_display_name = my_index.display_name
-                my_index_id = my_index.name.split('/')[-1]
-
-                my_index_endpoint_name = my_index_endpoint._gca_resource.name
-                my_index_endpoint_display_name = my_index_endpoint.display_name
-                my_index_endpoint_id = my_index_endpoint.name.split('/')[-1]
+                my_index_endpoint = aiplatform.MatchingEngineIndexEndpoint(index_endpoint_name)
+       
                 my_index_endpoint_public_domain = my_index_endpoint.public_endpoint_domain_name
 
-                my_index = aiplatform.MatchingEngineIndex(my_index_name)
-
-                my_index_endpoint = aiplatform.MatchingEngineIndexEndpoint(my_index_endpoint_id)
                 
                 API_ENDPOINT=my_index_endpoint_public_domain
-                INDEX_ENDPOINT=my_index_endpoint_name
+                INDEX_ENDPOINT=index_endpoint_name
                 
                 # Build FindNeighborsRequest
                 datapoint = aiplatform_v1.IndexDatapoint(
@@ -132,20 +114,17 @@ with tab2:
                 )
                 
                 if not API_ENDPOINT:                
-                    st.write('saurabh API_ENDPOINT /n', API_ENDPOINT)
+                    st.write('API_ENDPOINT /n', API_ENDPOINT)
                 # Initialize MatchServiceClient
                 match_service_client = aiplatform_v1.MatchServiceClient(
                     client_options={"api_endpoint": API_ENDPOINT}
                 )
 
-                # st.write('saurabh match_service_client ', match_service_client)                
-                # st.write("saurabh find_neighbors_request  /n",find_neighbors_request)                
-
                 # Execute the request
                 response = match_service_client.find_neighbors(find_neighbors_request)
 
                 if not response:                                
-                    st.write("saurabh response",response.nearest_neighbors)
+                    st.write("Response",response.nearest_neighbors)
                 
                 # Prepare a DataFrame to store results
                 results = []
@@ -153,7 +132,7 @@ with tab2:
                 for result in response.nearest_neighbors:
                     for neighbor in result.neighbors:
                         if not neighbor :
-                            st.write("saurabh neighbor",neighbor)                        
+                            st.write("neighbor",neighbor)                        
                         clip_id = int(neighbor.datapoint.datapoint_id)
                         distance = neighbor.distance
                         df_match = shots_df.loc[shots_df.index == clip_id]
@@ -166,7 +145,7 @@ with tab2:
                 df_new = pd.DataFrame(results)
                 
                 if not results:                                                
-                    st.write('saurabh df_new', results , df_new)
+                    st.write('df_new', results , df_new)
 
                 # Sort by distance
                 df_sorted = df_new.sort_values(by="distance", ascending=True)
